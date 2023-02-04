@@ -53,6 +53,8 @@ export default UglyForm;
 
 Our first instinct as a seasoned would be to start writing first the reusable components and then the form. But that would bring us the problems earlier mentioned. That's why we wrote ugly code first!
 
+So this is just half of the process, now that it works, we can start beautifying it.
+
 # "Beautifying Your Code for Optimal Functionality"
 Once your ugly code works, it's time to start beautifying it. This process involves making your code more readable, maintainable, and scalable. By doing this, you can ensure that your code is optimized for performance and efficiency. Some of the steps you can take to beautify your code include:
 
@@ -70,7 +72,8 @@ interface Props {
   value: string;
 }
 
-const Input: React.FC<Props> = ({ handleChange, value }) => {
+// src/components/atoms/Input.tsx
+export const Input: React.FC<Props> = ({ handleChange, value }) => {
   return (
     <input
       className="p-4 border border-gray-400 rounded w-64"
@@ -81,6 +84,7 @@ const Input: React.FC<Props> = ({ handleChange, value }) => {
   );
 };
 
+// src/components/atoms/Button.tsx
 const Button: React.FC = () => {
   return (
     <button
@@ -92,6 +96,7 @@ const Button: React.FC = () => {
   );
 };
 
+// src/components/molecules/Form.tsx
 const Form: React.FC = () => {
   const [value, setValue] = React.useState("");
   
@@ -110,7 +115,9 @@ const Form: React.FC = () => {
 export default Form;
 ```
 
-So the next time you're working on a project, remember to write ugly code that works, then beautiful code that also works.
+We now have three reusable components that we can use in other parts of our application, we can easily modify them as needed as our application grows. 
+
+Following this strategy we got rid of frustration, time-consuming bugs, and we can now focus on what's next, testing and debugging. So the next time you're working on a project, remember to write ugly code that works, then beautiful code that also works.
 
 Conclusion:
 In conclusion, writing ugly code that works, then beautiful code that also works is an effective approach for software developers. This approach saves time and results in cleaner, more efficient code in the long run. By focusing on functionality first, and then optimizing for readability and maintainability, you can ensure that your code is optimized for performance and efficiency. So the next time you're working on a project, remember to write ugly code that works, then beautiful code that also works.
