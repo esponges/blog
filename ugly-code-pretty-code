@@ -119,8 +119,6 @@ We now have three reusable components that we can use in other parts of our appl
 
 - Single responsibility principle: Each component has a single responsibility, the Input component is responsible for rendering an input element, the Button component is responsible for rendering a button element, and the Form component is responsible for rendering a form element.
 - Open/closed principle: Each component is open for extension but closed for modification. This means that we can easily extend the functionality of each component without having to modify the existing code.
-- Interface segregation principle: Each component has a single responsibility, so it doesn't need to implement any methods that it doesn't use.
-- Dependency inversion principle: Each component depends on abstractions, not on concretions. This means that each component depends on the interface of the other components, not on their implementation.
 
 Following this strategy we got rid of frustration, time-consuming bugs, and we can now focus on what's next, testing and debugging. So the next time you're working on a project, remember to write ugly code that works, then beautiful code that also works.
 
