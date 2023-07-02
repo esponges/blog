@@ -1,8 +1,8 @@
-How to Build a Contextual Chatbot with LangChain and PostgreSQL + Drizzle ORM
-
 Have you ever wanted to have a chatbot that could understand the context of a conversation and a document? For example, imagine you're reading a document about how to build a chatbot, and you have a question about a specific step. You could ask your chatbot the question, and it would be able to answer you without you having to copy and paste anything.
 
-This is what contextual chats are all about. They allow you to have a natural conversation with a chatbot, even if the chatbot is not familiar with the topic of the conversation. Contextual chats are made possible by a combination of technologies, including LangChain, PostgreSQL, and Drizzle.
+This is what contextual chats are all about. They allow you to have a natural conversation with a chatbot, even if the chatbot is not familiar with the topic of the conversation.
+
+Contextual chats are made possible by a combination of technologies, including LangChain, PostgreSQL, and Drizzle.
 
 - LangChain is a framework that makes it easy to interact with language models.
 - PostgreSQL is a database that can be used to store documents.
@@ -10,19 +10,11 @@ This is what contextual chats are all about. They allow you to have a natural co
 
 In this tutorial, we will show you how to build a contextual chatbot using these technologies. We will start by creating a simple chatbot that can answer questions about documents. Then, we will show you how to use LangChain to interact with a language model, PostgreSQL to store documents, and Drizzle to query documents.
 
-By the end of this tutorial, you will have a working contextual chatbot that can answer questions about documents. You will also have a better understanding of how these technologies can be used to build contextual chatbots.
+By the end of this tutorial, you will have an idea of how to build a working contextual chatbot that can answer questions about documents. You will also have a better understanding of how these technologies can be used to build contextual chatbots.
 
-Here are some of the benefits of contextual chats:
+In my case I wanted the interface to accept a PDF file and upload it to the database and it looked like this:
 
-- Improved user experience: Contextual chats can improve the user experience by making it easier to have a natural conversation with a chatbot.
-- Increased customer satisfaction: Contextual chats can increase customer satisfaction by providing customers with the information they need in a timely and efficient manner.
-- Boosted sales: Contextual chats can boost sales by providing customers with the information they need to make a purchase.
-
-Here are some of the ways that LangChain, PostgreSQL, and Drizzle can be used to build contextual chatbots:
-
-- LangChain: LangChain can be used to interact with language models, which can be used to understand the context of a conversation and a document.
-- PostgreSQL: PostgreSQL can be used to store documents, which can be used to store the information that the chatbot needs to answer questions.
-- Drizzle: Drizzle can be used to query documents in PostgreSQL, which can be used to retrieve the information that the chatbot needs to answer questions.
+![chatbot preview](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/k5512r07iwb77wdak8w1.png)
 
 ---
 
@@ -496,11 +488,11 @@ type Response = {
 };
 ```
 
-Your chat bot could look something like this:
+That was it. Apologies for the long post but I wanted to make sure that I covered all the steps to make this work.
 
-And here's the source code of a working example in case you want to play with, check more details and -hopefully- improve it!
+Here's the [source code] (https://github.com/esponges/gpt-langchain-upload-doc-chatbot) of a working example in case you want to play with, check more details and -hopefully- improve it!
 
-Conclusion
+## Conclusion
 
 In this tutorial, we have shown you how to build a contextual chatbot using LangChain, PostgreSQL, and Drizzle. We started by creating a simple chatbot that could answer questions about documents. Then, we showed you how to use LangChain to interact with a language model, PostgreSQL to store documents, and Drizzle to query documents.
 
@@ -514,8 +506,65 @@ Deploy the chatbot to a production environment. This would allow you to share th
 
 I hope you enjoyed this tutorial!
 
+### Bonus
+
+Query and update with Prism ORM
+
+```ts
+// schema.prisma.ts
+
+model LangChainDocs {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  name      String
+  nameSpace String
+  docs      Docs[]
+}
+
+model Docs {
+  id              String        @id @default(uuid())
+  createdAt       DateTime      @default(now())
+  metadata        String // json string
+  pageContent     String
+  name            String
+  docs            LangChainDocs @relation(fields: [langChainDocsId], references: [id])
+  langChainDocsId String
+}
+
+// for uploading documents to the database
+const prismaInsertDocs = async (docsToUpload: Document[], fileName: string) => {
+  await prisma.langChainDocs.create({
+    data: {
+      name: fileName,
+      nameSpace: fileName,
+      docs: {
+        create: docsToUpload.map((doc) => ({
+          name: fileName,
+          metadata: JSON.stringify(doc.metadata),
+          pageContent: doc.pageContent,
+        })),
+      },
+    },
+  });
+};
+
+// for querying the database
+export const getDocumentsFromDB = async (fileName: string) => {
+  const docs = await prisma.langChainDocs.findFirst({
+    where: {
+      name: fileName,
+    },
+    include: {
+      docs: true,
+    },
+  });
+
+  return docs;
+};
+```
+
 Sources:
 
 As Isaac Newton said: "If I have seen further it is by standing on the shoulders of Giants".
 
-Most of the frontend has been kept as is from the original project that I used to get started with Langchain and made a number of changes to make it work using PostgreSQL and Drizzle ORM.
+Most of the frontend has been kept as is from [the original project] (https://github.com/mayooear/gpt4-pdf-chatbot-langchain) that I used to get started with [Langchain] (https://js.langchain.com/docs/) and made a number of changes to make it work using PostgreSQL and [Drizzle] (https://orm.drizzle.team/docs/quick-start) ORM.
