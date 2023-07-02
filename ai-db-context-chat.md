@@ -1,10 +1,32 @@
 How to Build a Contextual Chatbot with LangChain and PostgreSQL + Drizzle ORM
 
-Something that I've always disliked of using ChatGPT or Bard for understanding a document is that I have always to copy and paste chunks of the document into my actual conversation. This is not only annoying but also time consuming. I've always wanted to have a chatbot that could understand the context of the conversation and the document that I'm reading and be able to answer my questions without having to copy and paste anything.
+Have you ever wanted to have a chatbot that could understand the context of a conversation and a document? For example, imagine you're reading a document about how to build a chatbot, and you have a question about a specific step. You could ask your chatbot the question, and it would be able to answer you without you having to copy and paste anything.
 
-The great things of contextual chats is that you get rid of the need of having to copy and paste anything. You can just ask your chatbot a question and it will answer you. This is great for reading documents and having a conversation with your chatbot at the same time. This is not only for people that would like to understand more about an specific topic but also for websites that would like to have a chatbot that can answer about their ONLY products or services in an efficient and scalable way.
+This is what contextual chats are all about. They allow you to have a natural conversation with a chatbot, even if the chatbot is not familiar with the topic of the conversation. Contextual chats are made possible by a combination of technologies, including LangChain, PostgreSQL, and Drizzle.
 
-Fortunately with the rise of technologies like the OpenAI API, Lanchain which is a library made to make developing applications powered by language models easier and PostgreSQL and Drizzle which is the raising star of ORMs, we can now make this possible with a few lines of code.
+- LangChain is a framework that makes it easy to interact with language models.
+- PostgreSQL is a database that can be used to store documents.
+- Drizzle is an ORM that can be used to query documents in PostgreSQL.
+
+In this tutorial, we will show you how to build a contextual chatbot using these technologies. We will start by creating a simple chatbot that can answer questions about documents. Then, we will show you how to use LangChain to interact with a language model, PostgreSQL to store documents, and Drizzle to query documents.
+
+By the end of this tutorial, you will have a working contextual chatbot that can answer questions about documents. You will also have a better understanding of how these technologies can be used to build contextual chatbots.
+
+Here are some of the benefits of contextual chats:
+
+- Improved user experience: Contextual chats can improve the user experience by making it easier to have a natural conversation with a chatbot.
+- Increased customer satisfaction: Contextual chats can increase customer satisfaction by providing customers with the information they need in a timely and efficient manner.
+- Boosted sales: Contextual chats can boost sales by providing customers with the information they need to make a purchase.
+
+Here are some of the ways that LangChain, PostgreSQL, and Drizzle can be used to build contextual chatbots:
+
+- LangChain: LangChain can be used to interact with language models, which can be used to understand the context of a conversation and a document.
+- PostgreSQL: PostgreSQL can be used to store documents, which can be used to store the information that the chatbot needs to answer questions.
+- Drizzle: Drizzle can be used to query documents in PostgreSQL, which can be used to retrieve the information that the chatbot needs to answer questions.
+
+---
+
+With no further ado, let's get started!
 
 For this tutorial you should be familiar with Typescript, PostgreSQL and Drizzle (or similar ORMs like PRisma) and probably NextJS but you can adapt this tutorial to any other framework since we'll focus on the backend only
 
@@ -292,7 +314,7 @@ export default async function handler(
 }
 ```
 
-Please remember that I'm using the NextJS routes api so you'll have to adapt this code to your framework of choice.
+> Please remember that I'm using the NextJS routes api so you'll have to adapt this code to your framework of choice.
 
 Great, we now have a file uploaded to our database. Now it's time to query the database to get the document and the metadata of the document and use it to have a conversation with our chatbot using the tools that Langchain provides us.
 
@@ -374,6 +396,25 @@ const documents = sqlDocs[0].docs.map(
 );
 ```
 
+We've also have to arrange the chat history in a way that Langchain can understand:
+
+```ts
+// api/chat.ts
+import {
+  AIChatMessage,
+  BaseChatMessage,
+  HumanChatMessage,
+} from 'langchain/schema';
+
+const chatHistory: BaseChatMessage[] = [];
+history?.forEach((_, idx) => {
+  // first message is always human message
+  chatHistory.push(new HumanChatMessage(history[idx][0]));
+  // second message is always AI response
+  chatHistory.push(new AIChatMessage(history[idx][1]));
+});
+```
+
 We'll use the HNSWLib library to embed locally the documents in a vector space. This will allow us to query the database for the most similar document to the question that we're asking.
 
 ```ts
@@ -435,11 +476,9 @@ const HNSWStore = await HNSWLib.fromDocuments(
   new OpenAIEmbeddings()
 );
 
-//create chain for conversational AI
 const chain = await makeChain(HNSWStore);
 
-//Ask a question using chat history
-// OpenAI recommends replacing newlines with spaces for best results
+// Sanitize the question since OpenAI recommends replacing newlines with spaces for best results
 const sanitizedQuestion = question.trim().replaceAll('\n', ' ');
 const response = await chain.call({
   question: sanitizedQuestion,
@@ -456,3 +495,27 @@ type Response = {
   sourceDocuments: Document[];
 };
 ```
+
+Your chat bot could look something like this:
+
+And here's the source code of a working example in case you want to play with, check more details and -hopefully- improve it!
+
+Conclusion
+
+In this tutorial, we have shown you how to build a contextual chatbot using LangChain, PostgreSQL, and Drizzle. We started by creating a simple chatbot that could answer questions about documents. Then, we showed you how to use LangChain to interact with a language model, PostgreSQL to store documents, and Drizzle to query documents.
+
+By the end of this tutorial, you have a working contextual chatbot that can answer questions about documents. You also have a better understanding of how these technologies can be used to build contextual chatbots.
+
+Here are some of the next steps that you can take:
+
+Improve the chatbot's ability to answer questions. You can do this by training the language model on a larger dataset of documents.
+Add more features to the chatbot. For example, you could add the ability to generate summaries of documents, or the ability to answer open-ended questions.
+Deploy the chatbot to a production environment. This would allow you to share the chatbot with others and gather feedback.
+
+I hope you enjoyed this tutorial!
+
+Sources:
+
+As Isaac Newton said: "If I have seen further it is by standing on the shoulders of Giants".
+
+Most of the frontend has been kept as is from the original project that I used to get started with Langchain and made a number of changes to make it work using PostgreSQL and Drizzle ORM.
