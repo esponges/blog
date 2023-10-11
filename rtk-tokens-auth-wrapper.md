@@ -170,6 +170,9 @@ const slice = createSlice({
           // set the token in the cookies
           setAuthCookie(payload.token, 'auth_token');
 
+          // store the user data in the store
+          // mutation also works
+          // state = payload;
           return payload;
         }
       )
@@ -214,6 +217,8 @@ export const AuthWrapper = ({ children }: Props) => {
   useEffect(() => {
     if (!token) {
       push('/login');
+      // will explain this in a moment
+      dispatch(logout());
     }
   }, [token, push]);
 
@@ -254,4 +259,23 @@ const ProtectedPage = () => {
     </AuthWrapper>
   );
 };
+```
+
+Finally, adding the `logout` action to the `auth` slice will allow us to clear the cookies and the store when the user logs out. We will not create an api endpoint for this since we don't need to make a request to the server to log out. But depending on your use case you might want to create an endpoint for this with its corresponding api matcher.
+
+```ts
+const slice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    logout: () => {
+      removeCookie('auth_token');
+      // clear the auth slice data
+      return {};
+    },
+  },
+  extraReducers: (builder) => {
+    // ...
+  },
+});
 ```
