@@ -83,7 +83,6 @@ Considering that we have an existing Next.js with a Redux Toolkit store we will 
 // this is how the API response could look like
 type LoginResponse = {
   token: string;
-  refreshToken: string;
   userEmail: string;
   userName: string;
   id: string;
@@ -100,7 +99,7 @@ const slice = createSlice({
 export const authReducer = slice.reducer;
 ```
 
-Now lets setup the api slice. We will use the `createApi` function from RTKQ to create the api slice. We will have a mutation for the login endpoint and a query for the user endpoint which will be used to get the user data when the user comes back to the application and his token is still valid.
+Now lets setup the api slice. We will use the `createApi` function from RTKQ to create the api slice that will initially have a mutation for the login endpoint and a query for the user endpoint which will be used to get the user data when the user comes back to the application and his token is still valid.
 
 ```ts
 // store/authApi.ts
@@ -115,10 +114,7 @@ export const authApi = createApi({
         : window.location.origin,
   }),
   endpoints: (builder) => ({
-    login: builder.mutation<
-      LoginResponse,
-      { userName: string; password: string }
-    >({
+    login: builder.mutation<LoginResponse, { userName: string, password: string }>({
       query: ({ userName, password }) => ({
         url: '/api/login',
         method: 'POST',
@@ -131,7 +127,8 @@ export const authApi = createApi({
     getAuthData: builder.query<LoginResponse, { token: string }>({
       query: ({ token }) => ({
         url: 'api/auth-details',
-        // if we don't specify the method it will default to GET
+        // this is the default but I'm leaving it here for reference
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -140,12 +137,17 @@ export const authApi = createApi({
   }),
 });
 
-export const { useLoginMutation } = authApi;
+export const { useLoginMutation, useGetAuthDataQuery } = authApi;
 ```
 
-Now we need to add the api matchers to the auth slice so that we can update the state when the login or getAuthData endpoints are called. We'll also declare a `setAuthCookie` method that will store the token in the cookies.
+Now we need to add the api matchers to the auth slice so that we can update the state when the `login` or `getAuthData` endpoints are called. The `matchFulfilled` matcher will be used to update the state when the request is successful. There are other matchers ([info] (https://redux-toolkit.js.org/api/createReducer#parameters-2) ) that can be used to update the state when the request is rejected or pending.
+
+We'll also declare a `setAuthCookie` method that will _base64_ encode and store the token in the browser cookies. I like the `cookies-next` library for this but you can use any other library or even the native `document.cookie` API.
 
 ```ts
+import { setCookie } from 'cookies-next';
+import { createSlice } from '@reduxjs/toolkit';
+
 // store/auth.ts
 const setAuthCookie = (token: string, name: string) => {
   const toBase64 = Buffer.from(token).toString('base64');
@@ -173,7 +175,7 @@ const slice = createSlice({
           setAuthCookie(payload.token, 'auth_token');
 
           // store the user data in the store
-          // mutation also works
+          // "mutation" also works
           // state = payload;
           return payload;
         }
@@ -181,6 +183,7 @@ const slice = createSlice({
       .addMatcher(
         authApi.endpoints.getAuthData.matchFulfilled,
         (_state, { payload }) => {
+          // in case we receive a new token when refetching the details
           setAuthCookie(payload.token, 'auth_token');
           return payload;
         }
@@ -193,14 +196,7 @@ Lets declare some helpers to get the cookies and return possible valid tokens.
 
 ```ts
 // lib/cookies.ts
-const getCookie = (name: string) => {
-  const cookies = document.cookie.split(';');
-  const cookie = cookies.find((cookie) => cookie.includes(name));
-
-  if (!cookie) return undefined;
-
-  return cookie.split('=')[1];
-};
+import { getCookie } from 'cookies-next';
 
 // helpers to get cookies
 const getAuthCookie = (name: string) => {
@@ -223,7 +219,7 @@ export const getValidAuthTokens = () => {
 };
 ```
 
-Finally, it's time to create the wrapper layout component. This component will be used to wrap all of our application's authenticated pages. It will check the authentication status of the user, if it finds a valid token and no auth details in the store it will call the `getAuthData` endpoint to get the user data and update the store. If it doesn't find a valid token it will redirect the user to the login page.
+Finally, it's time to create the wrapper layout component. This component will be used to wrap all of our application's authenticated pages. It will check the authentication status of the user, if it finds a valid token and no auth details in the store it will call the `getAuthData` endpoint to get the user data and update the store. If it doesn't find a valid token it will delete any possibly existing token and redirect the user to the login page.
 
 ```tsx
 // components/AuthWrapper.tsx
@@ -269,14 +265,22 @@ export const AuthWrapper = ({ children }: Props) => {
 };
 ```
 
-The key in this component is using the `skip` option in the `useGetAuthDataQuery` hook. This option allows us to skip the execution of the query if the token is not valid or if the user info (we used `userEmail` but you could use any other auth property) is already in the store. This is important because we don't want to execute the query every time the user navigates to a children route. We only want to execute the query when the user comes back to the application and his token is still valid.
+The key in this component is using the `skip` option in the `useGetAuthDataQuery` hook. This option allows us to skip the execution of the query if the `token` is not valid or if the user info (we used `userEmail` but you could use any other auth property) is already in the store. This is important because we don't want to execute the query every time the user navigates to a wrapped route. We only want to execute this query when the user comes back -eg. reloading- to the application and his token is still valid.
 
-We can also make use of the cache feature of RTQK `keepUnusedDataFor` to keep the user data in the cache for a certain amount of time. (todo: check if it refetch could be skipped when data is already in the store)
+We can also make use of the cache feature of RTQK `keepUnusedDataFor` to keep the user data in the cache for a certain amount of time.
 
 We can wrap all the routes that should be authenticated using the `Page.getLayout` feature from Next.js. This will allow us to wrap all the pages that should be authenticated with the `AuthWrapper` component.
 
 ```tsx
 // pages/some-protected-page.tsx
+export default function SomeProtectedPage() {
+  return (
+    <div>
+      <h1>Some protected page content</h1>
+    </div>
+  );
+}
+
 Page.getLayout = function getLayout(page) {
   return <AuthWrapper>{page}</AuthWrapper>;
 };
@@ -314,10 +318,12 @@ const ProtectedPage = () => {
 };
 ```
 
-Finally, adding the `logout` action to the `auth` slice will allow us to clear the cookies and the store when the user logs out. We will not create an api endpoint for this since we don't need to make a request to the server to log out. But depending on your use case you might want to create an api endpoint for this with its corresponding api matcher.
+Finally, adding the `logout` action to the `auth` slice will allow us to clear the cookies and the store when the user logs out. We will not create an api endpoint —therefore we will declare the action in the `reducers` keys— for this since we don't need to make a request to the server to log out. But depending on your use case you might want to create an api endpoint for this with its corresponding api matcher.
 
 ```ts
 // store/auth.ts
+import { removeCookie } from 'cookies-next';
+
 const slice = createSlice({
   name: 'auth',
   initialState,
@@ -329,11 +335,11 @@ const slice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // ...
+    // here we have the api matchers — login and getAuthData
   },
 });
 ```
 
 ## Conclusion
 
-Redux Toolkit Query is a powerful library that can be used to simplify authentication management in Next.js applications. By using the wrapper layout strategy, you can easily implement a robust authentication system that is both secure and user-friendly. If you have some previous experience using Redux (React Query experience helps too!) in any form, you should be able to implement this approach without much trouble. 
+Redux Toolkit Query is a powerful library that can be used to simplify authentication management in Next.js applications. By using the wrapper layout strategy, you can easily implement a robust authentication system that is both secure and user-friendly. If you have some previous experience using Redux (React Query experience helps too!) in any form, you should be able to implement this approach without much trouble.
