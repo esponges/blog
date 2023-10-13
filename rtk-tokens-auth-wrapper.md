@@ -41,6 +41,10 @@ Authentication and refresh tokens are essential for securing web applications. H
 
 In this blog post I'll show you how to leverage from the phantastic Redux Toolkit Query library and web storage (cookies) to implement a robust authentication system that allows users to stay logged in for as long (almost) as they want without having to worry about expiring tokens or session timeouts.
 
+### Why Redux Toolkit and not React Query?
+
+RQ is a great library for data fetching and caching, but RTKQ is more powerful and flexible. It gives us the full power of handling server state, similar to RQ, while also keeping the powerful features from Redux Toolkit.
+
 ## Introduction
 
 ### What are authentication and refresh tokens?
