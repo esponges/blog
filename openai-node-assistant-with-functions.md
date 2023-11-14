@@ -295,7 +295,7 @@ To keep the conversation we have the option to again read the user input which w
         "Do you want to keep having a conversation? (yes/no) ",
       );
 
-      continueConversation = continueAsking.toLowerCase() === "yes";
+      continueConversation = continueAsking.toLowerCase().includes("yes");
 
       // If the continueConversation state is falsy show an ending message
       if (!continueConversation) {
@@ -445,7 +445,7 @@ async function main() {
         "Do you want to keep having a conversation? (yes/no) ",
       );
 
-      continueConversation = continueAsking.toLowerCase() === "yes";
+      continueConversation = continueAsking.toLowerCase().includes("yes");;
 
       // If the continueConversation state is falsy show an ending message
       if (!continueConversation) {
@@ -471,4 +471,40 @@ If you've created a new node project using `npm init` —recommended— you can 
 }
 ```
 
+We can now run our program using `npm start` and we should get the following output:
 
+```bash
+Hello there, I'm Fernando's personal Math assistant. We'll start with a small quiz.
+
+> Quiz:
+ display_quiz
+Question: What is the derivative of 3x^2?
+
+      f'(x) = 6x
+Question: What is the integral of x dx?
+
+      Options: 0.5x^2 + C,x^2 + C,2x + C,None of these
+
+      0.5x^2 + C
+
+Your responses from the quiz:
+ [ "f'(x) = 6x\n", '0.5x^2 + C\n' ]
+
+Great work on the quiz! Your response to the first question, the derivative of \( 3x^2 \), is correct; it is \( 6x \).
+
+For the second question, you correctly chose \( 0.5x^2 + C \) as the integral of \( x \) with respect to \( x \). Good job! Keep it up! 
+
+Do you want to keep having a conversation? (yes/no) yes
+
+You next question to the model: 
+Why did you ask derivatives and integral question. A lot of years have passed since I've done any of those.
+
+My apologies for selecting those math topics. It's common to use calculus questions in a math context, but I understand it might not be fresh in everyone's mind. If you have any other areas of interest or specific topics you'd like to review or learn about, please let me know, and I can tailor the content accordingly. 
+
+Do you want to keep having a conversation? (yes/no) no
+Alrighty then, I hope you learned something!
+```
+
+And that's it! We've created a simple math assistant that can answer questions and keep the conversation going. This is just a proof of concept, but it shows the potential of the new Assistant API. I'm sure we'll see more examples and use cases in the near future.
+
+If you want to see the full code, you can find it in this [repo](https://github.com/esponges/openai-beta-assistant/blob/main/function-calling.ts)
