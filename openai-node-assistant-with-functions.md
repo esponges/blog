@@ -16,7 +16,7 @@ For this example we'll initially create a simple quiz to test function calling a
 
 ### The implementation
 
-For this example I've used the (cookbook) [https://cookbook.openai.com/examples/assistants_api_overview_python] example provided by OpenAI and the command line strategy from this (post) [https://medium.com/@ralfelfving/tutorial-get-started-with-the-new-openai-assistants-api-7049c2517bfe] from Ralf Elfving and I've tweaked it a bit to make it more interactive.
+For this example I've used the [cookbook](https://cookbook.openai.com/examples/assistants_api_overview_python) example provided by OpenAI and the command line strategy from this [post](https://medium.com/@ralfelfving/tutorial-get-started-with-the-new-openai-assistants-api-7049c2517bfe) from Ralf Elfving and I've tweaked it a bit to make it more interactive.
 
 We'll just need a few basic things:
 
