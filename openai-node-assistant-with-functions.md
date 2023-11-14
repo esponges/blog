@@ -16,7 +16,7 @@ For this example we'll initially create a simple quiz to test function calling a
 
 ### The implementation
 
-For this example I've used the cookbook example provided by OpenAI and the command line strategy from this post and I've tweaked it a bit to make it more interactive.
+For this example I've used the (cookbook) [https://cookbook.openai.com/examples/assistants_api_overview_python] example provided by OpenAI and the command line strategy from this (post) [https://medium.com/@ralfelfving/tutorial-get-started-with-the-new-openai-assistants-api-7049c2517bfe] from Ralf Elfving and I've tweaked it a bit to make it more interactive.
 
 We'll just need a few basic things:
 
@@ -508,3 +508,8 @@ Alrighty then, I hope you learned something!
 And that's it! We've created a simple math assistant that can answer questions and keep the conversation going. This is just a proof of concept, but it shows the potential of the new Assistant API. I'm sure we'll see more examples and use cases in the near future.
 
 If you want to see the full code, you can find it in this [repo](https://github.com/esponges/openai-beta-assistant/blob/main/function-calling.ts)
+
+## References
+- [OpenAI Assistants API Overview](https://cookbook.openai.com/examples/assistants_api_overview_python)
+- [Tutorial: Get started with the new OpenAI Assistants API](https://medium.com/@ralfelfving/tutorial-get-started-with-the-new-openai-assistants-api-7049c2517bfe)
+- [Open AI Cookbook](https://cookbook.openai.com/examples/how_to_build_an_agent_with_the_node_sdk)
