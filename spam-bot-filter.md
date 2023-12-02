@@ -24,10 +24,145 @@ While the [quickstart guide](https://developers.google.com/gmail/api/quickstart/
 
 I honestly do enough research of which where the exact scopes that I needed, so I just added all of them which is obviously dangerous. For this like this why you should be careful when implementing this poc. If you know which ones are the exact ones please add them in the comments.
 
+### The googleapi code
+
+The code below is the one that I used to get the emails from my inbox. I've added some comments to explain what each part does.
+
 ```ts
+// email.ts
 const fs = require('fs').promises;
 const path = require('path');
 const process = require('process');
 const { authenticate } = require('@google-cloud/local-auth');
 const { google } = require('googleapis');
+
+// this gives ALL permissions to the app - USE WITH CAUTION
+// app should be configured before running this script in the OAuth consent screen -> Scopes for Google APIs
+// If modifying these scopes, delete token.json.
+const SCOPES = ['https://mail.google.com/'];
+
+// The file token.json stores the user's access and refresh tokens, and is
+// created automatically when the authorization flow completes for the first
+// time.
+// the credentials.json file is the one downloaded from the google docs tutorial
+const TOKEN_PATH = path.join(process.cwd(), 'token.json');
+const CREDENTIALS_PATH = path.join(
+  process.cwd(),
+  'email-cleaner/credentials.json'
+);
+
+// Load credentials or create new credentials if none exist
+async function loadSavedCredentialsIfExist() {
+  try {
+    const content = await fs.readFile(TOKEN_PATH);
+    const credentials = JSON.parse(content);
+    return google.auth.fromJSON(credentials);
+  } catch (err) {
+    return null;
+  }
+}
+
+async function saveCredentials(client) {
+  const content = await fs.readFile(CREDENTIALS_PATH);
+  const keys = JSON.parse(content);
+  const key = keys.installed || keys.web;
+  const payload = JSON.stringify({
+    type: 'authorized_user',
+    client_id: key.client_id,
+    client_secret: key.client_secret,
+    refresh_token: client.credentials.refresh_token,
+  });
+  await fs.writeFile(TOKEN_PATH, payload);
+}
+
+export async function authorize() {
+  let client = await loadSavedCredentialsIfExist();
+  if (client) {
+    return client;
+  }
+  client = await authenticate({
+    scopes: SCOPES,
+    keyfilePath: CREDENTIALS_PATH,
+  });
+  if (client.credentials) {
+    await saveCredentials(client);
+  }
+  return client;
+}
+
+// get message details
+async function getMessage(auth, id) {
+  const gmail = google.gmail({ version: 'v1', auth });
+  return gmail.users.messages.get({
+    userId: 'me',
+    id,
+  });
+}
+
+// get all unread emails from the inbox
+export async function listUnreadMessages(auth, qty = 10) {
+  const gmail = google.gmail({ version: 'v1', auth });
+  const res = await gmail.users.messages.list({
+    userId: 'me',
+    maxResults: qty,
+    q: 'is:unread',
+  });
+  const messages = res.data.messages;
+  if (!messages || messages.length === 0) {
+    console.log('No messages found.');
+    return;
+  }
+
+  let messagesWithDetails = [];
+  for await (const message of messages) {
+    // get message data
+    const res = await getMessage(auth, message.id);
+    messagesWithDetails.push({ id: message.id, snippet: res.data.snippet });
+  }
+
+  return messagesWithDetails;
+}
+
+// delete one or more messages
+export async function deleteMessages(auth, ids: string | string[]) {
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  if (Array.isArray(ids)) {
+    return gmail.users.messages.batchDelete({
+      userId: 'me',
+      ids,
+    });
+  }
+
+  return gmail.users.messages.delete({
+    userId: 'me',
+    id: ids,
+  });
+}
+
+// mark one or more messages as read
+export async function markAsRead(auth, ids: string | string[]) {
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  if (Array.isArray(ids)) {
+    return gmail.users.messages.batchModify({
+      userId: 'me',
+      ids,
+      requestBody: {
+        removeLabelIds: ['UNREAD'],
+      },
+    });
+  }
+
+  return gmail.users.messages.modify({
+    userId: 'me',
+    id: ids,
+    requestBody: {
+      removeLabelIds: ['UNREAD'],
+    },
+  });
+}
+```
+
+Again, the above code is very similar to the one in the [quickstart](https://developers.google.com/gmail/api/quickstart/nodejs) guide. I've added the `deleteMessages` and `markAsRead` functions only.
 
