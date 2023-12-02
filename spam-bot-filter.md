@@ -3,11 +3,31 @@ I own several accounts from gmail, all from many years ago, I also use Drive as 
 The new Assistant API with function calling tools was one of those things that caught my attention, and even wrote a blog post that left me thinking of any real possibilities for the potential of this technology. Then, somewhere in X I saw a post of some lady that used the API to clean up her email inbox, and I thought, well, that's cool, that could solve my issue, but she didn't really share any code, so I thought it was something that might be useful for me many folks out there who probably have the same issue than me, so I thought it would be a great opportunity to try the new API with a real use case.
 
 ## What will this code do?
+
 This code will pick a number of the latest unread emails from your inbox, the assistant will analyze whether if the email appears to be spam/marketing email or not. If it's not spam it will mark it as read, if it's spam/marketing email it will delete it.
 
-It will work for any gmail account. For other email providers
-you'll have to figure out how to get the emails from the provider API.
+It will work for any gmail account. For other email providers you'll have to figure out the CRUD operations with their API yourself.
 
-This code is a proof of concept, and i'd recommend you to use it with caution. First try it with a small dataset
-and see if it works for you, and then try it with a bigger dataset. I'm not responsible for any data loss or
-any other issues that might arise from using this code. 
+This code is a proof of concept, and I'd recommend you to use it with caution. First try it with a small dataset and see if it works for you, and then try it with a bigger dataset. I'm not responsible for any data loss or any other issues that might arise from using this code.
+
+
+### Gmail CRUD operations
+
+I've taken the initial code from their Node.js [quickstart](https://developers.google.com/gmail/api/quickstart/nodejs) guide, and added the functionality to mark as read, and delete emails. I won't go into much detail here since the code is pretty self explanatory.
+
+I believe you'll have to create first a Google Cloud project. I already had one but it's fairly easy to create one. See steps [here](https://developers.google.com/workspace/guides/create-project).
+
+### Adding required scopes to your app
+The quickstart guide only adds the `readonly` scope, but we need to add the `modify` scope to be able to mark emails as read, and the `delete` scope to be able to delete emails. These permissions can be added during the _Configure the OAuth consent screen_. 
+
+**screenshot with the scopes**
+
+I honestly didn't know which where the exact scopes that I needed, so I just added all of them, and it worked. For this like this why you should be careful when implementing this poc. If you know which ones are the exact ones, please let me know.
+
+```ts
+const fs = require('fs').promises;
+const path = require('path');
+const process = require('process');
+const { authenticate } = require('@google-cloud/local-auth');
+const { google } = require('googleapis');
+
