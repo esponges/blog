@@ -1,14 +1,13 @@
-I own several accounts from gmail, all from many years ago, I also use Drive as backup for my personal files, and I also use Google Photos to backup my photos. My email is usually "free" of unread emails, but gmail categorizes emails by Inbox, Promotions, Social, etc. Those emails that are not in the inbox are usually unread, and I don't really care about them, but I don't want to delete them either, so I just leave them there. I've been doing this for years, and now I'm facing a problem where I had to buy a Google One subscription because I ran out of space in my Drive, and since Google won't let you receive or send emails if you run out of space, I had to do something about it. But manually going through all those emails is a pain so I thought, why not use AI to do this for me?
 
-The new Assistant API with function calling tools was one of those things that caught my attention, and even wrote a blog post that left me thinking of any real possibilities for the potential of this technology. Then, somewhere in X I saw a post of some lady that used the API to clean up her email inbox, and I thought, well, that's cool, that could solve my issue, but she didn't really share any code, so I thought it was something that might be useful for me many folks out there who probably have the same issue than me, so I thought it would be a great opportunity to try the new API with a real use case.
+Managing multiple Gmail accounts over the years, I've relied on Google Drivefor file backups and Google Photos for photo storage. Despite keeping my primary inbox tidy, Gmail's categorization often leaves non-inbox emails unread, creating a digital clutter I've ignored. Recently, this oversight forced me to invest in a Google One subscription as my Drive reached its capacity. Google's policy of limiting email activity when storage is full prompted me to find a solution. Manually sorting through years of emails seemed daunting, leading me to explore the potential of AI assistance.
+
+The Assistant API with function calling tools recently grabbed my attention. After writing a blog post exploring its potential applications, I came across an X (former Twitter) post where someone claimed to have used the API to organize their email inbox. This intrigued me — it seemed like a practical solution for my email management challenges. However, the post didn't provide any code, making me think that this could be a useful tool for many others sharing the same issue. So I decided to dive into the googleapi and combine it with the OpenAI assistant API, testing it out with a real-world use case.
 
 ## What will this code do?
 
-This code will pick a number of the latest unread emails from your inbox, the assistant will analyze whether if the email appears to be spam/marketing email or not. If it's not spam it will mark it as read, if it's spam/marketing email it will delete it.
+The proposed code addresses the challenge of identifying and managing unread emails efficiently. It will analyze the latest unread emails in your inbox, categorizing them as spam/marketing or legitimate. Legitimate emails will be marked as read, while spam/marketing emails will be promptly deleted. This solution is designed for Gmail accounts, and users of other email providers will need to adapt the code to suit their specific APIs.
 
-It will work for any gmail account. For other email providers you'll have to figure out the CRUD operations with their API yourself.
-
-This code is a proof of concept, and I'd recommend you to use it with caution. First try it with a small dataset and see if it works for you, and then try it with a bigger dataset. I'm not responsible for any data loss or any other issues that might arise from using this code.
+This proof of concept serves as a powerful tool, but I recommend exercising caution. Begin by testing it on a small dataset before scaling up to avoid potential data loss or other issues. I assume no responsibility for any consequences arising from the use of this code.
 
 
 ### Gmail CRUD operations
@@ -18,11 +17,12 @@ I've taken the initial code from their Node.js [quickstart](https://developers.g
 I believe you'll have to create first a Google Cloud project. I already had one but it's fairly easy to create one. See steps [here](https://developers.google.com/workspace/guides/create-project).
 
 ### Adding required scopes to your app
-The quickstart guide only adds the `readonly` scope, but we need to add the `modify` scope to be able to mark emails as read, and the `delete` scope to be able to delete emails. These permissions can be added during the _Configure the OAuth consent screen_. 
 
-**screenshot with the scopes**
+While the [quickstart guide](https://developers.google.com/gmail/api/quickstart/nodejs) mentions the `readonly` scope, our solution requires additional scopes (`modify` and `delete`). During the OAuth consent screen configuration, you can add these permissions for effective email management. I initially added all scopes, ensuring functionality, but precise scope knowledge is recommended for production implementation. 
 
-I honestly didn't know which where the exact scopes that I needed, so I just added all of them, and it worked. For this like this why you should be careful when implementing this poc. If you know which ones are the exact ones, please let me know.
+![OAuth Consent Screen with Scopes](link-to-screenshot)
+
+I honestly do enough research of which where the exact scopes that I needed, so I just added all of them which is obviously dangerous. For this like this why you should be careful when implementing this poc. If you know which ones are the exact ones please add them in the comments.
 
 ```ts
 const fs = require('fs').promises;
