@@ -224,7 +224,7 @@ import {
   listUnreadMessages,
   markAsRead,
 } from './email';
-import { Thread } from "openai/resources/beta/threads/threads";
+import { Thread } from 'openai/resources/beta/threads/threads';
 
 // import the required dependencies
 require('dotenv').config();
@@ -275,7 +275,7 @@ async function spamMessageFilter(messages: Message[], auth) {
     .then(() => console.log('messages deleted', delIds))
     .catch(() => {
       // throw
-      throw new Error('error deleting messages');
+      console.log('error deleting messages with ids', delIds);
     });
 
   const readIds = messages
@@ -287,7 +287,7 @@ async function spamMessageFilter(messages: Message[], auth) {
     .then(() => console.log('messages marked as read', readIds))
     .catch(() => {
       // throw
-      throw new Error('error marking messages as read');
+      throw new Error('error marking messages as read with ids', readIds);
     });
 }
 
@@ -313,7 +313,7 @@ async function main() {
   let keepCleaning = true;
   // once a thread has been created, we can use the thread id to continue the conversation
   let threadId: string;
-  while(keepCleaning) {
+  while (keepCleaning) {
     // fetch the latest unread emails
     const gmailAuth = await initGmailAuth();
 
@@ -323,7 +323,7 @@ async function main() {
       console.log('Failed to fetch messages');
       return;
     }
-  
+
     // create a thread
     let thread: Thread;
     if (!threadId) {
@@ -334,7 +334,7 @@ async function main() {
     threadId = thread.id;
 
     console.log('starting thread with id: ', threadId);
-  
+
     const messagesAsString = JSON.stringify(messages);
     await openai.beta.threads.messages.create(thread.id, {
       role: 'user',
@@ -342,14 +342,14 @@ async function main() {
       content: `\`\`\`json\n${messagesAsString}\n\`\`\``,
     });
     console.log('thinking...');
-  
+
     // use runs to wait for the assistant response and then retrieve it
     const run = await openai.beta.threads.runs.create(thread.id, {
       assistant_id: assistant.id,
     });
-  
+
     let actualRun = await openai.beta.threads.runs.retrieve(thread.id, run.id);
-  
+
     // polling mechanism to see if actualRun is completed
     // and we're ready to retrieve the assistant response
     // this should be made more robust.
@@ -364,19 +364,19 @@ async function main() {
         // extra single tool call
         const toolCall =
           actualRun.required_action?.submit_tool_outputs?.tool_calls[0];
-  
+
         const name = toolCall?.function.name;
-  
+
         // parse the response from the assistant
         const args = JSON.parse(toolCall?.function?.arguments || '{}');
         const messages = args.messages;
-  
+
         if (name === 'spam_message_filter') {
           await spamMessageFilter(messages, gmailAuth);
         } else {
-          throw new Error('Unknown function name');
+          console.log('unknown function');
         }
-  
+
         // we must submit the tool outputs to the run to continue
         await openai.beta.threads.runs.submitToolOutputs(thread.id, run.id, {
           tool_outputs: [
@@ -391,17 +391,19 @@ async function main() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       actualRun = await openai.beta.threads.runs.retrieve(thread.id, run.id);
     }
-  
+
     // Get the last assistant message from the messages array
-    const assisstantMessages = await openai.beta.threads.messages.list(thread.id);
-  
+    const assisstantMessages = await openai.beta.threads.messages.list(
+      thread.id
+    );
+
     // Find the last message for the current run
     const lastMessageForRun = assisstantMessages.data
       .filter(
         (message) => message.run_id === run.id && message.role === 'assistant'
       )
       .pop();
-  
+
     // If an assistant message is found, console.log() it
     if (lastMessageForRun) {
       // aparently this is not correctly typed
@@ -409,7 +411,7 @@ async function main() {
       const messageValue = lastMessageForRun.content[0] as {
         text: { value: string };
       };
-  
+
       console.log(messageValue?.text?.value);
     }
 
@@ -424,4 +426,67 @@ async function main() {
 main().catch(console.error);
 ```
 
-There are some key parts that I will explain. If you want to understand the rest of the code, please you can take a look at my previous [blog post](https://dev.to/esponges/build-the-new-openai-assistant-with-function-calling-52f5).
+There are some key parts that I will explain next. If you want to understand better the rest of the code, please you can take a look at my previous [blog post](https://dev.to/esponges/build-the-new-openai-assistant-with-function-calling-52f5).
+
+The `requires_action` status means that the assistant has already processed the input and is waiting for the functions to be invoked. The model should provide a json object with the shape of the json objects above.ºº  The `spam_message_filter` function is the one that we created in the OpenAI playground. The `spamMessageFilter` function is the one that invokes the google api to delete and mark as read the emails.
+
+```ts
+if (actualRun.status === 'requires_action') {
+  // extra single tool call
+  const toolCall =
+    actualRun.required_action?.submit_tool_outputs?.tool_calls[0];
+
+  const name = toolCall?.function.name;
+
+  // parse the response from the assistant
+  const args = JSON.parse(toolCall?.function?.arguments || '{}');
+  const messages = args.messages;
+
+  // ...
+}
+```
+
+Having the necessary information, we can invoke the `spamMessageFilter` function. This is a function that is created by us and it can do anything we want. In this case, using the methods from the `email.ts` file we'll first delete the spam emails and then mark the remaining ones as read.
+
+```ts
+async function spamMessageFilter(messages: Message[], auth) {
+  const delIds = messages
+    .filter((message) => message.is_spam_or_marketing)
+    .map((message) => message.id);
+
+  // delete the messages
+  deleteMessages(auth, delIds)
+    .then(() => console.log('messages deleted', delIds))
+    .catch(() => {
+      // throw
+      throw new Error('error deleting messages');
+    });
+
+  const readIds = messages
+    .filter((message) => !message.is_spam_or_marketing)
+    .map((message) => message.id);
+
+  // mark as read
+  markAsRead(auth, readIds)
+    .then(() => console.log('messages marked as read', readIds))
+    .catch(() => {
+      // throw
+      throw new Error('error marking messages as read');
+    });
+}
+```
+
+Finally, after submitting a `success` response to the assistant, we can continue looping and asking the user if they want to continue cleaning their inbox.
+
+```ts
+  const answer = await askQuestion('Do you want to continue? (y/n) ');
+  if (answer.startsWith('n')) {
+    keepCleaning = false;
+  }
+```
+
+This should be enough for this PoC to work. You can try increasing the number of emails to be processed by changing the `quantity` argument from the `fetchLatestUnreadEmails` function. 
+
+Once you're sure that everything is working as expected, you could decrease the input tokens provided to the assistant, probably removing the `reason` and `snippet` properties from the `Message` type. This will reduce the cost of each call to the assistant.
+
+
