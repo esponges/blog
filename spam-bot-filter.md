@@ -10,7 +10,7 @@ This proof of concept serves as a powerful tool, but I recommend exercising caut
 
 ### Gmail CRUD operations
 
-I've taken the initial code from their Node.js [quickstart](https://developers.google.com/gmail/api/quickstart/nodejs) guide, and added the functionality to mark as read, and delete emails. I won't go into much detail here since the code is pretty self explanatory.
+I've taken the initial code from their Node.js [quickstart](https://developers.google.com/gmail/api/quickstart/nodejs) guide, and added the functionality to mark as read, and delete emails. I won't go into much detail here since the code is pretty self explanatory. Just follow the steps in the quickstart guide and you should be good to go.
 
 I believe you'll have to create first a Google Cloud project. I already had one but it's fairly easy to create one. See steps [here](https://developers.google.com/workspace/guides/create-project).
 
@@ -210,6 +210,40 @@ To invoke this function, the assistant needs specific instructions. The provided
 > You expertly filter emails for spam using advanced techniques. Given email IDs and snippets, your role is to swiftly provide an object for spam_message_filter with the array of messages. Invoke this function without engaging in conversation, and upon completion, simply finish the run with 'success' or 'failure'.
 
 These instructions ensure the assistant operates without seeking clarification, executing the function and returning the result promptly. The code_interpreter tool must be toggled on for proper functionality.
+
+Now, if we provide the assistant with an object like this
+
+```json
+[
+  {
+    "id": "18b1f9b955819e62",
+    "snippet": "With global server load balancing at ngrok, you can deliver faster and more reliable experiences for your end users. View in browser oct-2023-newsletter Product updates ngrok-newsletter-oct-"
+  },
+  {
+    "id": "18b1f46604c9bc57",
+    "snippet": "Discover a world-class developer experience with new platform features, fresh UI components, performance improvements, and more. stream-logo-1.png NEW RELEASES Discover a World-Class Developer"
+  }
+]
+```
+
+it will return an object like this
+
+```json
+[
+  {
+    id: '18b1f9b955819e62',
+    snippet: 'With global server load balancing at ngrok, you can deliver faster and more reliable experiences for your end users. View in browser oct-2023-newsletter Product updates ngrok-newsletter-oct-',
+    is_spam_or_marketing: true,
+    reason: 'Marketing content within newsletter snippet.'
+  },
+  {
+    id: '18b1f46604c9bc57',
+    snippet: 'Discover a world-class developer experience with new platform features, fresh UI components, performance improvements, and more. stream-logo-1.png NEW RELEASES Discover a World-Class Developer',
+    is_spam_or_marketing: true,
+    reason: 'Promotional content regarding new releases.'
+  }
+]
+```
 
 Note: While the Assistant API can be created directly from code (see [here](https://platform.openai.com/docs/assistants/overview?lang=node.js)), I opted to create the assistant from the playground and use the assigned assistant ID in the code to maintain consistency and avoid creating a new assistant with each invocation.
 
@@ -428,7 +462,7 @@ main().catch(console.error);
 
 There are some key parts that I will explain next. If you want to understand better the rest of the code, please you can take a look at my previous [blog post](https://dev.to/esponges/build-the-new-openai-assistant-with-function-calling-52f5).
 
-The `requires_action` status means that the assistant has already processed the input and is waiting for the functions to be invoked. The model should provide a json object with the shape of the json objects above.ºº  The `spam_message_filter` function is the one that we created in the OpenAI playground. The `spamMessageFilter` function is the one that invokes the google api to delete and mark as read the emails.
+The `requires_action` status means that the assistant has already processed the input and is waiting for the functions to be invoked. The model should provide a json object with the shape of the json objects above.ºº The `spam_message_filter` function is the one that we created in the OpenAI playground. The `spamMessageFilter` function is the one that invokes the google api to delete and mark as read the emails.
 
 ```ts
 if (actualRun.status === 'requires_action') {
@@ -479,14 +513,25 @@ async function spamMessageFilter(messages: Message[], auth) {
 Finally, after submitting a `success` response to the assistant, we can continue looping and asking the user if they want to continue cleaning their inbox.
 
 ```ts
-  const answer = await askQuestion('Do you want to continue? (y/n) ');
-  if (answer.startsWith('n')) {
-    keepCleaning = false;
-  }
+const answer = await askQuestion('Do you want to continue? (y/n) ');
+if (answer.startsWith('n')) {
+  keepCleaning = false;
+}
 ```
 
-This should be enough for this PoC to work. You can try increasing the number of emails to be processed by changing the `quantity` argument from the `fetchLatestUnreadEmails` function. 
+This should be enough for this PoC to work. You can try increasing the number of emails to be processed by changing the `quantity` argument from the `fetchLatestUnreadEmails` function.
 
 Once you're sure that everything is working as expected, you could decrease the input tokens provided to the assistant, probably removing the `reason` and `snippet` properties from the `Message` type. This will reduce the cost of each call to the assistant.
 
+If you want to see the full code, you can find it [here](https://github.com/esponges/openai-beta-assistant/tree/main/email-cleaner)
 
+## Conclusion
+
+The Assistant API with function calling tools is a powerful tool that can be used to automate many tasks. In this PoC, we've seen how we can use it to automate the process of cleaning our inbox from spam emails. This is just one of the many use cases that this API can be used for. I'm sure that we'll see many more in the future.
+
+---
+
+### References
+
+- [OpenAI Assistant API tools](https://platform.openai.com/docs/assistants/tools)
+- [Google Gmail API](https://developers.google.com/gmail/api/quickstart/nodejs)
