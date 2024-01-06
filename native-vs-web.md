@@ -34,3 +34,15 @@ const styles = StyleSheet.create({
 
 1. There are several solutions to use tailwind with React Native like `tailwind-rn`, `nativewind`, `react-native-tailwindcss`, etc. but they are not as mature as the web version. Where `nativewind` is the most mature one but it is not as feature-rich as the web version.
 2. Css modules and StyleSheet share the same concept of scoped styles and could be used to create styles and they are native to the platform. No extra dependencies are required.
+
+## Persisting Data
+
+- React (Web): Uses `localStorage` to persist non sensitive data. To store JWT tokens we use cookies.
+- React Native (Mobile): Uses `AsyncStorage` to persist data. This is considered an equivalent to the storage APIs on the web.
+
+Unfortunately the storage APIs on the web and mobile are not compatible with each other. So we need to use different APIs to persist data on each platform.
+
+### Considerations
+
+1. `AsyncStorage` is deprecated and will be removed in future releases. It is recommended to use `@react-native-async-storage/async-storage` instead.
+2. There are solutions for secure storage like `react-native-keychain`, however we should do further research to find the best solution.
