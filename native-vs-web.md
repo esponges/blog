@@ -53,3 +53,12 @@ Unfortunately the storage APIs on the web and mobile are not compatible with eac
 
 1. `AsyncStorage` is deprecated and will be removed in future releases. However there are great reliable alternatives such as `@react-native-async-storage/async-storage`.
 2. There are solutions for secure storage like `react-native-keychain`, however we should do further research to find the best solution.
+
+## Tools for sharing code between platforms
+
+At the moment there are no tools to migrate from one platform to another. However, there are some tools that can help us to share code between platforms like:
+
+- [react-native-web](https://www.npmjs.com/package/react-native-web) which allows rendering React Native components in the browser.
+- [nx](https://nx.dev/) which allows us to share code between platforms and even share components between platforms using a [monorepo](https://docs.expo.dev/guides/monorepos/) approach.
+
+From the above tools, I would only recommend using `nx` with very robust automation testing suites. Otherwise, I would recommend to keep the code separated and use the same state management libraries to share the business logic. This is because it would be easy to break the code in one platform and not notice it until we test it in the other platform.
