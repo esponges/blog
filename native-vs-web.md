@@ -1,5 +1,12 @@
 # React (web) vs React Native
 
+Both React and React Native are based on the same principles and share the same concepts like components, props, state, etc. However, there are some differences between them.
+
+## State Management
+
+Both React and React Native can use the same state management libraries like `redux`, `apollo-react`, and even `react-query` (now `tanstack-query`). _The implementation is almost the same_ for both platforms.
+
+This is great because the complexity of state management in production apps is usually __high__ and we can basically copy and paste the code from one platform to another.
 
 ## Component Libraries and UI Elements
 
@@ -40,9 +47,9 @@ const styles = StyleSheet.create({
 - React (Web): Uses `localStorage` to persist non sensitive data. To store JWT tokens we use cookies.
 - React Native (Mobile): Uses `AsyncStorage` to persist data. This is considered an equivalent to the storage APIs on the web.
 
-Unfortunately the storage APIs on the web and mobile are not compatible with each other. So we need to use different APIs to persist data on each platform.
+Unfortunately the storage APIs on the web and mobile are not compatible with each other and implementations are different.
 
 ### Considerations
 
-1. `AsyncStorage` is deprecated and will be removed in future releases. It is recommended to use `@react-native-async-storage/async-storage` instead.
+1. `AsyncStorage` is deprecated and will be removed in future releases. However there are great reliable alternatives such as `@react-native-async-storage/async-storage`.
 2. There are solutions for secure storage like `react-native-keychain`, however we should do further research to find the best solution.
