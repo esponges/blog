@@ -54,6 +54,56 @@ Unfortunately the storage APIs on the web and mobile are not compatible with eac
 1. `AsyncStorage` is deprecated and will be removed in future releases. However there are great reliable alternatives such as `@react-native-async-storage/async-storage`.
 2. There are solutions for secure storage like `react-native-keychain`, however we should do further research to find the best solution.
 
+## Navigation
+Navigation differs a lot between platforms are similar in some ways. For example, both platforms use a stack navigation to navigate between screens. However, the implementation is different. And if you are using nextjs, the implementation is completely different, since nextjs uses a file-based routing system and React Native uses a component-based routing system.
+
+e.g.:
+
+```jsx
+// Native
+import { createStackNavigator } from '@react-navigation/stack'
+
+const Stack = createStackNavigator()
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
+}
+```
+
+```jsx
+// Web using React Router
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
+
+function App() {
+  return (
+    <Router>
+      <Switch>
+        <Route path="/profile">
+          <ProfileScreen />
+        </Route>
+        <Route path="/">
+          <HomeScreen />
+        </Route>
+      </Switch>
+    </Router>
+  )
+}
+```
+
+Using nextjs which is a file-based routing system:
+
+- pages
+  - index.js
+  - profile.js
+  - [id].js
+
 ## Tools for sharing code between platforms
 
 At the moment there are no tools to migrate from one platform to another. However, there are some tools that can help us to share code between platforms like:
