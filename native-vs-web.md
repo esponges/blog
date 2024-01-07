@@ -62,3 +62,18 @@ At the moment there are no tools to migrate from one platform to another. Howeve
 - [nx](https://nx.dev/) which allows us to share code between platforms and even share components between platforms using a [monorepo](https://docs.expo.dev/guides/monorepos/) approach.
 
 From the above tools, I would only recommend using `nx` with very robust automation testing suites. Otherwise, I would recommend to keep the code separated and use the same state management libraries to share the business logic. This is because it would be easy to break the code in one platform and not notice it until we test it in the other platform.
+
+### Expo
+
+Expo it's a great alternative to build React Native apps without having to deal with the native side of things: the native side means handling the native code for each platform (iOS and Android). This makes the development process faster and easier, even for web developers. It makes local development and testing easier, and it makes it possible to develop for iOS without a Mac.  For deployment there's EAS (Expo Application Services) —similar to Vercel— which is a set of tools that allow us to build and publish our app to the app stores without having to deal with the native side of things.
+
+While expo is very useful, it has some limitations like: 
+
+- Some libraries are not compatible with expo.
+- It is not possible to use native code (Java, Kotlin, Swift, Objective-C) with expo.
+
+Good thing is that you ever _really_ need to use native code, you can always eject (port to Native CLI) from expo and use the native code.
+
+Some great videos about expo:
+- https://www.youtube.com/watch?v=q-sKCsscIsc&ab_channel=SimonGrimm
+- https://www.youtube.com/watch?v=04Sa3TBOYnw&ab_channel=TomBaranowicz
