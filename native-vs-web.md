@@ -54,6 +54,10 @@ Unfortunately the storage APIs on the web and mobile are not compatible with eac
 1. `AsyncStorage` is deprecated and will be removed in future releases. However there are great reliable alternatives such as `@react-native-async-storage/async-storage`.
 2. There are solutions for secure storage like `react-native-keychain`, however we should do further research to find the best solution.
 
+### APIs
+
+Web APIs and Native APIs are fundamentally different, primarily because they are designed for different platforms and have different capabilities and limitations. Therefore expect a completely different implementation for each platform. 
+
 ## Navigation
 Navigation differs a lot between platforms are similar in some ways. For example, both platforms use a stack navigation to navigate between screens. However, the implementation is different. And if you are using nextjs, the implementation is completely different, since nextjs uses a file-based routing system and React Native uses a component-based routing system.
 
@@ -104,6 +108,12 @@ Using nextjs which is a file-based routing system:
   - profile.js
   - [id].js
 
+## Props
+
+React Native and React share the same fundamental principles, including the use of props (properties) to pass data and event handlers between components. However, there are differences in the specific props available and their usage, primarily because React Native and React cater to different environments (mobile vs. web).
+
+For example, React has the `onClick` prop for handling click events, while React Native has the `onPress` prop for handling press events. Likewise, React has the `className` prop for styling components, while React Native has the `style` prop for styling components. Many of the props are similar, but they are not the same. There are some web props that are native to the web and the DOM, and there are some native props that are native to the platform.
+
 ## Tools for sharing code between platforms
 
 At the moment there are no tools to migrate from one platform to another. However, there are some tools that can help us to share code between platforms like:
@@ -113,9 +123,12 @@ At the moment there are no tools to migrate from one platform to another. Howeve
 
 From the above tools, I would only recommend using `nx` with very robust automation testing suites. Otherwise, I would recommend to keep the code separated and use the same state management libraries to share the business logic. This is because it would be easy to break the code in one platform and not notice it until we test it in the other platform.
 
-### Expo
+I've created this mono repo to test shared code between a nextjs and an expo app:
+https://github.com/esponges/react-expo-shared
 
-Expo it's a great alternative to build React Native apps without having to deal with the native side of things: the native side means handling the native code for each platform (iOS and Android). This makes the development process faster and easier, even for web developers. It makes local development and testing easier, and it makes it possible to develop for iOS without a Mac.  For deployment there's EAS (Expo Application Services) —similar to Vercel— which is a set of tools that allow us to build and publish our app to the app stores without having to deal with the native side of things.
+## Expo
+
+Expo it's a great alternative to build React Native apps without having to deal with the native side of things: the native side means handling the native code for each platform (iOS and Android). For example, we use the `expo-camera` package for using the camera without needing to have two different implementations per platform. This makes the development process faster and easier, even for web developers. It makes local development and testing easier, and it makes it possible to develop for iOS without a Mac.  For deployment there's EAS (Expo Application Services) —similar to Vercel— which is a set of tools that allow us to build and publish our app to the app stores without having to deal with the native side of things.
 
 While expo is very useful, it has some limitations like: 
 
@@ -127,3 +140,11 @@ Good thing is that you ever _really_ need to use native code, you can always eje
 Some great videos about expo:
 - https://www.youtube.com/watch?v=q-sKCsscIsc&ab_channel=SimonGrimm
 - https://www.youtube.com/watch?v=04Sa3TBOYnw&ab_channel=TomBaranowicz
+
+### Conclusion
+
+Expo has evolved a lot during the last years and it is a great tool to build React Native apps. However, I would only recommend using for small to medium/small size teams. Also you have to be sure that the features you need are compatible with expo. Good thing is that in a worst case scenario, you can always eject from expo and use the native code.
+
+## Wrapping up
+
+React Native is a great tool to build mobile apps. It is based on the same principles as React and it is easy to learn. However, there are some differences between React and React Native that we need to be aware of. A lot of important concepts are the same, but the implementation is different. There's no shortcut for migrating from one platform to another, but there are some tools that can help us to share code between platforms. However, with tools like _Expo_ web developers can build mobile apps without having to deal with the native side of things. This makes the development process faster and easier, even for web developers.
